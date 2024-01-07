@@ -16,3 +16,7 @@ void BubbleSort (int ayData[], int iLen);
 
 
 void ShakerSort (int ayData[], int iLen);
+
+
+void Merge (int ayData[], int iStart, int iFinish, int iMiddle);
+void MergeSort(int ayData[], int iStart, int iFinish);

@@ -1,5 +1,7 @@
 #include "Sort.h"
-
+#include <stdlib.h>
+#include <memory.h>
+#include <limits>
 
 
 /*F+F+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -179,3 +181,83 @@ void ShakerSort(int ayData[], int iLen)
 
 	}
 }
+
+/*F+F+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  Function: Merge
+
+  Summary:  合併已排序好的陣列
+
+  Args:
+	int ayData[]
+		左右各半排序完成的陣列。
+	int iStart
+		數據起始位置。
+	int iFinish
+		數據未端位置。
+	int iMiddle
+		數據中間位置
+
+  Returns:	None.
+-----------------------------------------------------------------F-F*/
+void Merge(int ayData[], int iStart, int iFinish, int iMiddle)
+{
+	int iSizeLeft = iMiddle - iStart + 1;
+	int iSizeRight = iFinish - iMiddle;
+
+	int* iLeft = (int*)malloc(sizeof(int) * (iSizeLeft + 1));
+	int* iRight = (int*)malloc(sizeof(int) * (iSizeRight + 1));
+
+	memcpy(iLeft, ayData + iStart, sizeof(int) * (iSizeLeft));
+	memcpy(iRight, ayData + iMiddle + 1, sizeof(int) * (iSizeRight));
+
+	iLeft[iSizeLeft] = INT_MAX;
+	iRight[iSizeRight] = INT_MAX;
+
+	int iLeftIndex = 0;
+	int iRightIndex = 0;
+
+	for (int i = iStart; i <= iFinish; i++)
+	{
+		if (iLeft[iLeftIndex] <= iRight[iRightIndex])
+		{
+			ayData[i] = iLeft[iLeftIndex];
+			iLeftIndex++;
+		}
+		else
+		{
+			ayData[i] = iRight[iRightIndex];
+			iRightIndex++;
+		}
+	}
+
+	free(iLeft);
+	free(iRight);
+
+}
+
+/*F+F+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  Function: MergeSort
+
+  Summary:  合併排序法
+
+  Args:
+	int ayData[]
+		未排序陣列。
+	int iStart
+		數據起始位置。
+	int iFinish
+		數據未端位置。
+
+  Returns:	None.
+-----------------------------------------------------------------F-F*/
+void MergeSort(int ayData[], int iStart, int iFinish)
+{
+	if (iFinish > iStart)
+	{
+		int iMiddle = (iFinish + iStart) / 2;
+		MergeSort(ayData, iStart, iMiddle);
+		MergeSort(ayData, iMiddle + 1, iFinish);
+		Merge(ayData, iStart, iFinish, iMiddle);
+	}
+}
+

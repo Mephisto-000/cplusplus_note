@@ -17,7 +17,7 @@ int main()
 	}
 	cout << endl;
 	//InsertionSort(ayTestData, iTestArrayLen);
-	ShakerSort(ayTestData, iTestArrayLen);
+	MergeSort(ayTestData, 0, 9);
 
 
 	cout << "Sorted Data : " << endl;
