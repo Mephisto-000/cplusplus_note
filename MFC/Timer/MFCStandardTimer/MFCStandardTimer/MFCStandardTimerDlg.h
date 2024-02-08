@@ -7,7 +7,7 @@
 #define _USE_MATH_DEFINES // for C++
 #include <cmath>
 #include <deque>
-
+#include <random>
 
 // CMFCStandardTimerDlg 對話方塊
 class CMFCStandardTimerDlg : public CDialogEx

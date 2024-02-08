@@ -120,7 +120,14 @@ BOOL CMFCStandardTimerDlg::OnInitDialog()
 // 測試用波形函數
 double CMFCStandardTimerDlg::ExampleFun(double dTimeValue)
 {
-	return sin(dTimeValue);
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	/*std::uniform_real_distribution<double> dis(-1.0, 1.0);*/
+	std::normal_distribution<double> dis(0.0, 1.0);
+
+	double dRandom = dis(gen);
+
+	return 1.5 * sin(2 * dTimeValue) * cos(dTimeValue) + 0.9 * dRandom;
 }
 
 
@@ -283,14 +290,14 @@ void CMFCStandardTimerDlg::DrawWave(CDC* pDC, CRect rectShow)
 		double dY = 1 * m_queueResultValue[i - 1];
 
 
-		int iScreenX = (i - 1);
+		int iScreenX = 5*(i - 1);
 		int iScreenY = rectShow.CenterPoint().y - static_cast<int>(dY * 100 + 0.5);
 		pDC->MoveTo(CPoint(iScreenX, iScreenY));
 
 
 		double dY2 = 1 * m_queueResultValue[i];
 
-		int iScreenX2 = i;
+		int iScreenX2 = 5*i;
 		int iScreenY2 = rectShow.CenterPoint().y - static_cast<int>(dY2 * 100 + 0.5);
 		pDC->LineTo(CPoint(iScreenX2, iScreenY2));
 
@@ -343,7 +350,7 @@ void CMFCStandardTimerDlg::OnTimer(UINT_PTR nIDEvent)
 
 
 		// 將計算結果儲存於佇列中
-		if (m_queueResultValue.size() > rectDrawShowRegion.Width())
+		if (m_queueResultValue.size() > rectDrawShowRegion.Width()*0.2)
 		{
 			m_queueResultValue.pop_front();
 			m_queueResultValue.push_back(m_dResultValue);
