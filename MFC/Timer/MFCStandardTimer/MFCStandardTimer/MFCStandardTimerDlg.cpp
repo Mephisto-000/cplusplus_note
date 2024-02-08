@@ -47,20 +47,21 @@ END_MESSAGE_MAP()
 
 
 // CMFCStandardTimerDlg 對話方塊
-
-
-
 CMFCStandardTimerDlg::CMFCStandardTimerDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_MFCSTANDARDTIMER_DIALOG, pParent)
+	, m_strTimeSec(_T(""))
+	, m_dSimTime(0.0)
+	, m_nTimerID(1)
+	, m_fontTimeSec()
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_dSimTime = 0.0;
-	m_nTimerID = 1;
+	m_fontTimeSec.CreatePointFont(125, _T("Calibri"));
 }
 
 void CMFCStandardTimerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_STATIC_TIME_SHOW, m_strTimeSec);
 }
 
 BEGIN_MESSAGE_MAP(CMFCStandardTimerDlg, CDialogEx)
@@ -74,7 +75,6 @@ END_MESSAGE_MAP()
 
 
 // CMFCStandardTimerDlg 訊息處理常式
-
 BOOL CMFCStandardTimerDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -109,7 +109,7 @@ BOOL CMFCStandardTimerDlg::OnInitDialog()
 	return TRUE;  // 傳回 TRUE，除非您對控制項設定焦點
 }
 
-
+// 測試用的波行函數
 double CMFCStandardTimerDlg::ExampleFun(double dTimeValue)
 {
 	// 以 sin(t) 函數為範例
@@ -238,59 +238,6 @@ void CMFCStandardTimerDlg::DrawGrid(CDC* pDC, CRect rectShow)
 	pDC->SelectObject(pOldPenGrid);
 }
 
-
-// Timer 使用
-void CMFCStandardTimerDlg::OnTimer(UINT_PTR nIDEvent)
-{
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
-
-	//DWORD dwRecordTime = GetTickCount();
-	//DWORD dwElapsedTime = dwRecordTime - m_dwTime;
-	//double dSec = static_cast<double>(dwElapsedTime) / 1000.0;  // 經過的時間
-
-	if (nIDEvent == m_nTimerID)
-	{
-
-		if (m_dSimTime >= 2 * M_PI)
-		{
-			m_dSimTime = 0.0;
-			m_dSimTime += (2 * M_PI) / 250;  // 250
-		}
-		else
-		{
-			m_dSimTime += (2 * M_PI) / 250;
-		}
-
-
-		// 更新計算結果
-		m_dResultValue = ExampleFun(m_dSimTime);
-
-
-		CWnd* pDrawShowRegion = GetDlgItem(IDC_STATIC_PAINT_REGION);
-		CRect rectDrawShowRegion;
-
-		pDrawShowRegion->GetClientRect(&rectDrawShowRegion);
-
-
-		// 將計算結果儲存於佇列中
-		if (m_queueResultValue.size() > rectDrawShowRegion.Width())
-		{
-			m_queueResultValue.pop_front();
-			m_queueResultValue.push_back(m_dResultValue);
-		}
-		else
-		{
-			m_queueResultValue.push_back(m_dResultValue);
-		}
-
-
-		OnPaint();
-	}
-	CDialogEx::OnTimer(nIDEvent);
-}
-
-
-
 // 繪製模擬圖
 void CMFCStandardTimerDlg::DrawWave(CDC* pDC, CRect rectShow)
 {
@@ -345,6 +292,79 @@ void CMFCStandardTimerDlg::DrawWave(CDC* pDC, CRect rectShow)
 	pDC->SelectObject(pOldPenWave);
 }
 
+// Timer 使用
+void CMFCStandardTimerDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
+
+	//DWORD dwRecordTime = GetTickCount();
+	//DWORD dwElapsedTime = m_dwTime - dwRecordTime;
+	//double dSec = static_cast<double>(dwElapsedTime) / 1000.0;  // 經過的時間
+
+	//m_strTimeSec.Format(_T("%d  sec."), dSec);
+
+	//CWnd* pTimeShow = GetDlgItem(IDC_STATIC_TIME_SHOW);
+	//if (pTimeShow)
+	//{
+	//	pTimeShow->SetWindowText(m_strTimeSec);
+	//}
+
+
+	if (nIDEvent == m_nTimerID)
+	{
+		DWORD dwRecordTime = GetTickCount();
+		DWORD dwElapsedTime = dwRecordTime - m_dwTime;
+		double dSec = static_cast<double>(dwElapsedTime) / 1000.0;  // 經過的時間
+
+		m_strTimeSec.Format(_T("%lf  sec."), dSec);
+
+		CWnd* pTimeShow = GetDlgItem(IDC_STATIC_TIME_SHOW);
+		if (pTimeShow)
+		{
+			pTimeShow->SetFont(&m_fontTimeSec);
+			pTimeShow->SetWindowText(m_strTimeSec);
+		}
+
+
+
+		if (m_dSimTime >= 2 * M_PI)
+		{
+			m_dSimTime = 0.0;
+			m_dSimTime += (2 * M_PI) / 250;  // 250
+		}
+		else
+		{
+			m_dSimTime += (2 * M_PI) / 250;
+		}
+
+
+		// 更新計算結果
+		m_dResultValue = ExampleFun(m_dSimTime);
+
+
+		CWnd* pDrawShowRegion = GetDlgItem(IDC_STATIC_PAINT_REGION);
+		CRect rectDrawShowRegion;
+
+		pDrawShowRegion->GetClientRect(&rectDrawShowRegion);
+
+
+		// 將計算結果儲存於佇列中
+		if (m_queueResultValue.size() > rectDrawShowRegion.Width())
+		{
+			m_queueResultValue.pop_front();
+			m_queueResultValue.push_back(m_dResultValue);
+		}
+		else
+		{
+			m_queueResultValue.push_back(m_dResultValue);
+		}
+
+
+		OnPaint();
+	}
+	CDialogEx::OnTimer(nIDEvent);
+}
+
 
 // 當使用者拖曳最小化視窗時，
 // 系統呼叫這個功能取得游標顯示。
@@ -355,11 +375,10 @@ HCURSOR CMFCStandardTimerDlg::OnQueryDragIcon()
 
 
 
-
 void CMFCStandardTimerDlg::OnBnClickedButtonStart()
 {
 	// 紀錄開始時間
-	//m_dwTime = GetTickCount();
+	m_dwTime = GetTickCount();
 
 	// 每 0.01 秒更新模擬資料
 	SetTimer(m_nTimerID, 10, nullptr);
