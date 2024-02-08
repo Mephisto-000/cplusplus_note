@@ -14,28 +14,29 @@
 
 
 // 對 App About 使用 CAboutDlg 對話方塊
-
 class CAboutDlg : public CDialogEx
 {
 public:
 	CAboutDlg();
 
-// 對話方塊資料
+	// 對話方塊資料
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
 
-// 程式碼實作
+	// 程式碼實作
 protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
 {
 }
+
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -50,19 +51,23 @@ END_MESSAGE_MAP()
 CMFCStandardTimerDlg::CMFCStandardTimerDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_MFCSTANDARDTIMER_DIALOG, pParent)
 	, m_strTimeSec(_T(""))
+	, m_strTimeSecInit(_T("0.00  sec."))
 	, m_dSimTime(0.0)
+	, m_bTimeStart(FALSE)
 	, m_nTimerID(1)
 	, m_fontTimeSec()
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_fontTimeSec.CreatePointFont(125, _T("Calibri"));
+	m_fontTimeSec.CreatePointFont(200, _T("Calibri"));
 }
+
 
 void CMFCStandardTimerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_STATIC_TIME_SHOW, m_strTimeSec);
 }
+
 
 BEGIN_MESSAGE_MAP(CMFCStandardTimerDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
@@ -71,6 +76,8 @@ BEGIN_MESSAGE_MAP(CMFCStandardTimerDlg, CDialogEx)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON_START, &CMFCStandardTimerDlg::OnBnClickedButtonStart)
 	ON_BN_CLICKED(IDC_BUTTON_STOP, &CMFCStandardTimerDlg::OnBnClickedButtonStop)
+	ON_BN_CLICKED(IDOK, &CMFCStandardTimerDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDCANCEL, &CMFCStandardTimerDlg::OnBnClickedCancel)
 END_MESSAGE_MAP()
 
 
@@ -109,10 +116,10 @@ BOOL CMFCStandardTimerDlg::OnInitDialog()
 	return TRUE;  // 傳回 TRUE，除非您對控制項設定焦點
 }
 
-// 測試用的波行函數
+
+// 測試用波形函數
 double CMFCStandardTimerDlg::ExampleFun(double dTimeValue)
 {
-	// 以 sin(t) 函數為範例
 	return sin(dTimeValue);
 }
 
@@ -157,6 +164,12 @@ void CMFCStandardTimerDlg::OnPaint()
 	{
 		CDialogEx::OnPaint();
 
+		if (m_bTimeStart == FALSE)
+		{
+			GetDlgItem(IDC_STATIC_TIME_SHOW)->SetFont(&m_fontTimeSec);
+			GetDlgItem(IDC_STATIC_TIME_SHOW)->SetWindowText(m_strTimeSecInit);
+		}
+
 		// 取得操作視窗矩形資訊
 		CWnd* pDrawShowRegion = GetDlgItem(IDC_STATIC_PAINT_REGION);
 		CRect rectDrawShowRegion;
@@ -187,13 +200,11 @@ void CMFCStandardTimerDlg::OnPaint()
 	}
 }
 
+
 // 雙緩衝
 void CMFCStandardTimerDlg::DrawToBuffer(CDC* pDC, CRect rectShow)
 {
-
 	// 繪製背景網格
-
-
 	try {
 		DrawGrid(pDC, rectShow);
 	}
@@ -238,6 +249,7 @@ void CMFCStandardTimerDlg::DrawGrid(CDC* pDC, CRect rectShow)
 	pDC->SelectObject(pOldPenGrid);
 }
 
+
 // 繪製模擬圖
 void CMFCStandardTimerDlg::DrawWave(CDC* pDC, CRect rectShow)
 {
@@ -265,10 +277,6 @@ void CMFCStandardTimerDlg::DrawWave(CDC* pDC, CRect rectShow)
 	CPen penWave(PS_SOLID, 8, RGB(255, 0, 0));
 	CPen* pOldPenWave = pDC->SelectObject(&penWave);
 
-	//double dXStep = 0.1;  // 每隔像素點為 0.1 單位
-	//int iNumberPoints = rectShow.Width();  // 一個週期內點的數量與顯示區域的寬對應
-
-
 	for (int i = 1; i < m_queueResultValue.size(); i++)
 	{
 
@@ -276,14 +284,14 @@ void CMFCStandardTimerDlg::DrawWave(CDC* pDC, CRect rectShow)
 
 
 		int iScreenX = (i - 1);
-		int iScreenY = rectShow.CenterPoint().y - static_cast<int>(dY *100+0.5);
+		int iScreenY = rectShow.CenterPoint().y - static_cast<int>(dY * 100 + 0.5);
 		pDC->MoveTo(CPoint(iScreenX, iScreenY));
 
 
 		double dY2 = 1 * m_queueResultValue[i];
 
 		int iScreenX2 = i;
-		int iScreenY2 = rectShow.CenterPoint().y - static_cast<int>(dY2 *100+0.5);
+		int iScreenY2 = rectShow.CenterPoint().y - static_cast<int>(dY2 * 100 + 0.5);
 		pDC->LineTo(CPoint(iScreenX2, iScreenY2));
 
 
@@ -292,31 +300,17 @@ void CMFCStandardTimerDlg::DrawWave(CDC* pDC, CRect rectShow)
 	pDC->SelectObject(pOldPenWave);
 }
 
+
 // Timer 使用
 void CMFCStandardTimerDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
-
-	//DWORD dwRecordTime = GetTickCount();
-	//DWORD dwElapsedTime = m_dwTime - dwRecordTime;
-	//double dSec = static_cast<double>(dwElapsedTime) / 1000.0;  // 經過的時間
-
-	//m_strTimeSec.Format(_T("%d  sec."), dSec);
-
-	//CWnd* pTimeShow = GetDlgItem(IDC_STATIC_TIME_SHOW);
-	//if (pTimeShow)
-	//{
-	//	pTimeShow->SetWindowText(m_strTimeSec);
-	//}
-
-
 	if (nIDEvent == m_nTimerID)
 	{
 		DWORD dwRecordTime = GetTickCount();
 		DWORD dwElapsedTime = dwRecordTime - m_dwTime;
 		double dSec = static_cast<double>(dwElapsedTime) / 1000.0;  // 經過的時間
 
-		m_strTimeSec.Format(_T("%lf  sec."), dSec);
+		m_strTimeSec.Format(_T("%.2lf  sec."), dSec);
 
 		CWnd* pTimeShow = GetDlgItem(IDC_STATIC_TIME_SHOW);
 		if (pTimeShow)
@@ -359,7 +353,6 @@ void CMFCStandardTimerDlg::OnTimer(UINT_PTR nIDEvent)
 			m_queueResultValue.push_back(m_dResultValue);
 		}
 
-
 		OnPaint();
 	}
 	CDialogEx::OnTimer(nIDEvent);
@@ -374,28 +367,36 @@ HCURSOR CMFCStandardTimerDlg::OnQueryDragIcon()
 }
 
 
-
+// 開始繪製波形圖按鈕控件
 void CMFCStandardTimerDlg::OnBnClickedButtonStart()
 {
+	// 開始計時
+	m_bTimeStart = TRUE;
+
 	// 紀錄開始時間
 	m_dwTime = GetTickCount();
 
 	// 每 0.01 秒更新模擬資料
 	SetTimer(m_nTimerID, 10, nullptr);
-
 }
 
 
+// 停止繪製波形圖按鈕控件
 void CMFCStandardTimerDlg::OnBnClickedButtonStop()
 {
+	// 停止計時
+	m_bTimeStart = FALSE;
+
+	// 將自變數時間歸零
 	m_dSimTime = 0.0;
 
+	// 停止 Timer 計時器
 	KillTimer(m_nTimerID);
 
 	// 取得停止時的佇列長度
 	int iTotalQueueSize = m_queueResultValue.size();
 
-	// 清空佇列
+	// 清空儲存的波形數值佇列
 	if (m_queueResultValue.empty() != TRUE)
 	{
 		for (int i = 0; i < iTotalQueueSize; i++)
@@ -404,11 +405,25 @@ void CMFCStandardTimerDlg::OnBnClickedButtonStop()
 		}
 	}
 
-
+	// 更新顯示區域
 	CRect rectDrawShowRegion;
 	GetDlgItem(IDC_STATIC_PAINT_REGION)->GetWindowRect(&rectDrawShowRegion);
 	GetDlgItem(IDC_STATIC_PAINT_REGION)->GetParent()->ScreenToClient(rectDrawShowRegion);
 	InvalidateRect(&rectDrawShowRegion, TRUE);
 	UpdateWindow();
 
+}
+
+
+void CMFCStandardTimerDlg::OnBnClickedOk()
+{
+	// TODO: 在此加入控制項告知處理常式程式碼
+	CDialogEx::OnOK();
+}
+
+
+void CMFCStandardTimerDlg::OnBnClickedCancel()
+{
+	// TODO: 在此加入控制項告知處理常式程式碼
+	CDialogEx::OnCancel();
 }

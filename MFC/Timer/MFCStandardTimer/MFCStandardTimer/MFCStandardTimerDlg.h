@@ -47,7 +47,10 @@ public:
 	double m_dSimTime;                                // 模擬自變數時間
 	double m_dResultValue;                            // 模擬的計算結果
 
+	BOOL m_bTimeStart;                                // 判斷是否按下計時開始按鈕
+
 	CString m_strTimeSec;                             // 顯示時間
+	CString m_strTimeSecInit;                         // 初始的時間顯示設置
 
 	CFont m_fontTimeSec;							  // 顯示時間的文字格式設定 
 
@@ -57,4 +60,6 @@ public:
 	double ExampleFun(double dTimeValue);             // 範例模擬函數
 	afx_msg void OnBnClickedButtonStart();
 	afx_msg void OnBnClickedButtonStop();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedCancel();
 };
