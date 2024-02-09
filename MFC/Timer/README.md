@@ -120,7 +120,7 @@ void CTimersDlg::OnTimer(UINT nIDEvent)  // called every uElapse milliseconds
 
 ## 2. Waitable Timers
 
-可等待計時器於 Windows 98 和 Windows NT 4.0 中引入，它們旨在與需要阻塞一段時間的執行緒一起使用。這些計時器是內核對象，在指定的時間或規則的時間間隔內被觸發。它們可以指定**回調函數(callback function)**（實際上是**異步程序(asynchronous procedure)**調用，或稱為 **APC(Asynchronous Procedure Call)**），在計時器被觸發時調用該函數。這個回調函數通常被稱為**完成例程(completion routine)**。
+可等待計時器於 Windows 98 和 Windows NT 4.0 中引入，它們旨在與需要阻塞一段時間的執行緒一起使用。這些計時器是內核對象，在指定的時間或規則的時間間隔內被觸發。它們可以指定**回調函數(callback function)**（實際上是**非同步程序(asynchronous procedure)**調用，或稱為 **APC(Asynchronous Procedure Call)**），在計時器被觸發時調用該函數。這個回調函數通常被稱為**完成例程(completion routine)**。
 
 為了啟用完成例程的執行，執行緒必須處於警報狀態（執行 `SleepEx()`、`WaitForSingleObjectEx()`、`WaitForMultipleObjectsEx()`、`MsgWaitForMultipleObjectsEx()`、`SignalObjectAndWait()` 函數）。實際上，這意味著當我們使用可等待計時器時，我們的**主執行緒將被阻塞(main thread will be blocked)**。
 
@@ -157,5 +157,84 @@ BOOL SetWaitableTimer(HANDLE hTimer,
                       PTIMERAPCROUTINE pfnCompletionRoutine, 
                       LPVOID lpArgToCompletionRoutine, 
                       BOOL fResume); 
+```
+
+#### Arguments : 
+
+- **hTimer** : 想要觸發的計時器句柄。
+- **pDueTime** : 指定計時器狀態設置為已觸發的時間(第一次觸發的時間)。
+- **lPeriod** : 計時器的觸發週期，以毫秒為單位，類似於`SetTimer()`中的`uElapse`。
+- **pfnCompletionRoutine** : 指向完成例程的指標。可以為`NULL`。
+- **lpArgToCompletionRoutine** : 完成例程中的參數。可以為`NULL`。
+- **fResume** : 當計時器狀態已設置為已觸發時，是否繼續執行。
+
+#### Return Value : 
+
+- 當成功執行時，傳回非 0 值。
+
+
+
+最後，停止可等待計時器的函數：
+
+```c++
+BOOL CancelWaitableTimer(HANDLE hTimer); 
+```
+
+#### Arguments : 
+
+- **hTimer** : 想要銷毀的計時器句柄。
+
+#### Return Value : 
+
+- 當成功執行時，傳回非 0 值。
+
+
+
+### Example :
+
+```c++
+void CTimersDlg::OnButtonBegin()
+{
+	.
+	.
+	.
+    // 創建計時器
+    timerHandle = CreateWaitableTimer(NULL, FALSE, NULL);
+    
+    // 設置計時器
+	LARGE_INTEGER lElapse;
+	lElapse.QuadPart = - ((int)elapse * 10000);  // 將時間轉為 100 個納秒單位 (1*10^(-9) sec.)
+	BOOL succ = SetWaitableTimer(timerHandle, &lElapse, elapse, TimerProc, this, FALSE);
+
+    // 進入循環等待，直到收到信號或銷毀計時器
+	for (int i = 0; i < 10; i++)
+    {
+		SleepEx(INFINITE, TRUE);
+    }
+    
+    // 銷毀計時器
+	CancelWaitableTimer(timerHandle);
+    
+    // 關閉計時器 handle
+	CloseHandle (timerHandle);
+}
+
+void CTimersDlg::WaitTimerHandler() // called every elapse milliseconds
+{
+// do what you want to do, but quickly
+	.
+	.
+	.
+}
+
+void CALLBACK TimerProc(LPVOID lpArgToCompletionRoutine,
+                                DWORD dwTimerLowValue,
+                                DWORD dwTimerHighValue)
+{
+    // This is used only to call WaitTimerHandler
+    // Typically, this function is static member of CTimersDlg
+    CTimersDlg* obj = (CTimersDlg*) lpArgToCompletionRoutine;
+    obj->WaitTimerHandler();
+}
 ```
 
