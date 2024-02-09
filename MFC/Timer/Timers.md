@@ -44,6 +44,7 @@ UINT CWnd::SetTimer(UINT_PTR nIDEvent, UINT nElapse,
 
 - **hWnd** : 視窗的巨柄(handle)，也就是執行 Timer 的視窗位址，在 CWnd 函數中可以由 `this->GetSafeHwnd()`獲得。
 - **nIDEvent** : 計時器的編號，視窗可以設定多個計時器，用設定的編號區分。
+- **uElapse** : 計時器多久觸發一次，範圍為 10 ms. ~ 2147483647 ms. 。
 - **lpTimerFunc** : 計時器每次觸發呼叫的函數，基本用法設定成 `NULL`，呼叫 `OnTimer` (=`WM_TIMER`)這個函數即可。
 
 #### Return Value : 
@@ -63,10 +64,47 @@ or its MFC :
 BOOL CWnd::KillTimer(UINT_PTR nIDEvent);
 ```
 
-### Arguments : 
+#### Arguments : 
 
 - **hWnd** : 視窗的巨柄(handle)，也就是執行 Timer 的視窗位址，在 CWnd 函數中可以由 `this->GetSafeHwnd()`獲得。
 - **nIDEvent** : 計時器的編號，輸入要停止的計時器編號
 
-### Return Value : 
+#### Return Value : 
+
+- 如果成功銷毀計時器，傳回`TRUE`，如果失敗，傳回`FALSE`。
+
+
+
+### Example : 
+
+```c++
+void CTimersDlg::OnButtonBegin()
+{
+	.
+	.
+	.
+    // create the timer
+    SetTimer (m_nTimerID, uElapse, NULL);
+}
+
+
+void CTimersDlg::OnButtonStop()
+{
+    // destroy the timer
+    KillTimer(m_nTimerID);
+}
+
+
+void CTimersDlg::OnTimer(UINT nIDEvent)  // called every uElapse milliseconds
+{
+	// do something, but quickly
+	.
+	.
+	.
+
+	CDialog::OnTimer(nIDEvent);
+}
+```
+
+
 
