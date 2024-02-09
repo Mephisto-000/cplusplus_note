@@ -31,13 +31,17 @@ Win32計時器是如何工作的？首先，我們創建一個計時器，指定
 創建計時器 : 
 
 ```c++
-UINT_PTR SetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
+UINT_PTR SetTimer(HWND hWnd, 
+                  UINT_PTR nIDEvent, 
+                  UINT uElapse, 
+                  TIMERPROC lpTimerFunc);
 ```
 
 or its MFC : 
 ```c++
-UINT CWnd::SetTimer(UINT_PTR nIDEvent, UINT nElapse, 
-	void (CALLBACK EXPORT* lpfnTimer)(HWND, UINT, UINT_PTR, DWORD)); 
+UINT CWnd::SetTimer(UINT_PTR nIDEvent, 
+                    UINT nElapse, 
+                    void (CALLBACK EXPORT* lpfnTimer)(HWND, UINT, UINT_PTR, DWORD)); 
 ```
 
 #### Arguments : 
@@ -56,7 +60,8 @@ UINT CWnd::SetTimer(UINT_PTR nIDEvent, UINT nElapse,
 銷毀計時器 : 
 
 ```c++
-BOOL KillTimer(HWND hWnd, UINT_PTR uIDEvent);
+BOOL KillTimer(HWND hWnd, 
+               UINT_PTR uIDEvent);
 ```
 
 or its MFC :
@@ -94,7 +99,7 @@ void CTimersDlg::OnButtonStop()
     KillTimer(m_nTimerID);
 }
 
-
+// Callback function
 void CTimersDlg::OnTimer(UINT nIDEvent)  // called every uElapse milliseconds
 {
 	// do something, but quickly
@@ -112,4 +117,45 @@ void CTimersDlg::OnTimer(UINT nIDEvent)  // called every uElapse milliseconds
 請注意，使用Win32計時器事件處理是從UI線程完成的。這個事實的一個好處是，我們不需要擔心在計時器事件處理程序中損壞我們的數據；另一方面，**在`WM_TIMER`處理程序中花費的時間將影響UI的響應性。如果你不相信我，試著在`CTimersDlg::OnTimer()`內調用類似`::Sleep(10000);`的東西**。
 
 
+
+## 2. Waitable Timers
+
+可等待計時器於 Windows 98 和 Windows NT 4.0 中引入，它們旨在與需要阻塞一段時間的執行緒一起使用。這些計時器是內核對象，在指定的時間或規則的時間間隔內被觸發。它們可以指定**回調函數(callback function)**（實際上是**異步程序(asynchronous procedure)**調用，或稱為 **APC(Asynchronous Procedure Call)**），在計時器被觸發時調用該函數。這個回調函數通常被稱為**完成例程(completion routine)**。
+
+為了啟用完成例程的執行，執行緒必須處於警報狀態（執行 `SleepEx()`、`WaitForSingleObjectEx()`、`WaitForMultipleObjectsEx()`、`MsgWaitForMultipleObjectsEx()`、`SignalObjectAndWait()` 函數）。實際上，這意味著當我們使用可等待計時器時，我們的**主執行緒將被阻塞(main thread will be blocked)**。
+
+開始使用可等待計時器，我們必須打開一個現有的計時器，或創建新的計時器。創建可以通過調用以下函數來完成：
+
+### To create a timer : 
+
+創建計時器 : 
+
+```c++
+HANDLE CreateWaitableTimer(LPSECURITY_ATTRIBUTES lpTimerAttributes, 
+                           BOOL bManualReset, 
+                           LPCTSTR lpTimerName);
+```
+
+#### Arguments : 
+
+- **lpTimerAttributes** : 指向**安全描述符號(SECURITY_ATTRIBUTES)**(其實就是有關權限的設定)結構的指針，該結構指定了可等待計時器對象的安全描述符。可以為`NULL`。
+- **bManualReset** : 指定可等待計時器是手動重設還是自動重設。要是設為手動，需要調用 `SetWaitableTimer`才能將定時器變為有信號的，如果是自動的，則調用`WaitForSingleObject`實現定時器信號重置。
+- **lpTimerName** : 定時器名稱，可設為`NULL`。
+
+#### Return Value : 
+
+- 一個指向可等待計時器對象的句柄。
+
+
+
+現在，當我們有了可等待計時器對象的句柄，我們可以對它進行一些有用的操作。要設置它，我們將使用以下函數：
+
+```c++
+BOOL SetWaitableTimer(HANDLE hTimer, 
+                      const LARGE_INTEGER *pDueTime, 
+                      LONG lPeriod, 
+                      PTIMERAPCROUTINE pfnCompletionRoutine, 
+                      LPVOID lpArgToCompletionRoutine, 
+                      BOOL fResume); 
+```
 
