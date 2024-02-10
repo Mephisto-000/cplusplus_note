@@ -361,3 +361,79 @@ $\star$ **Waitable Timers 與 Standard Win32 Timers 的差異** :
 **兩者差異結論** : 
 
 **根據上述比較分析，可等待計時器和標準 Win32 計時器在使用方式、程序組織結構和消息處理方面存在顯著差異。選擇哪種計時器取決於應用程序的具體需求和使用情境。如果需要程序在等待計時器信號時暫停並釋放 CPU 資源，則可等待計時器是更好的選擇；如果需要在程序繼續運行的同時處理計時器事件，則標準 Win32 計時器可能更適合。**
+
+### Example 3 (詢問 ChatGPT, 使用 `WaitForMultipleObjects`) :
+
+```c++
+#include <windows.h>
+#include <iostream>
+
+// 計時器 ID
+#define TIMER_ID 1
+
+// 計時器事件處理函數
+VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+    // 計時器事件處理
+    std::cout << "計時器事件處理中..." << std::endl;
+}
+
+int main()
+{
+    // 創建計時器
+    HANDLE hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    if (hTimer == NULL)
+    {
+        std::cerr << "創建計時器失敗。" << std::endl;
+        return 1;
+    }
+
+    // 設置計時器，每秒觸發一次
+    if (!SetWaitableTimer(hTimer, NULL, 1000, TimerProc, NULL, FALSE))
+    {
+        std::cerr << "設置計時器失敗。" << std::endl;
+        CloseHandle(hTimer);
+        return 1;
+    }
+
+    // 創建事件對象
+    HANDLE hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (hEvent == NULL)
+    {
+        std::cerr << "創建事件對象失敗。" << std::endl;
+        CloseHandle(hTimer);
+        return 1;
+    }
+
+    // 將計時器和事件對象加入到待等待對象列表中
+    HANDLE handles[2] = { hTimer, hEvent };
+
+    // 等待計時器或事件信號的到來
+    DWORD dwWaitResult = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+
+    // 判斷等待的結果
+    switch (dwWaitResult)
+    {
+    case WAIT_OBJECT_0:
+        std::cout << "計時器觸發，進行相應處理。" << std::endl;
+        break;
+    case WAIT_OBJECT_0 + 1:
+        std::cout << "事件信號到來，進行相應處理。" << std::endl;
+        break;
+    case WAIT_TIMEOUT:
+        std::cout << "等待超時。" << std::endl;
+        break;
+    default:
+        std::cerr << "等待失敗，錯誤碼：" << GetLastError() << std::endl;
+        break;
+    }
+
+    // 關閉計時器和事件對象
+    CloseHandle(hTimer);
+    CloseHandle(hEvent);
+
+    return 0;
+}
+
+```
+
