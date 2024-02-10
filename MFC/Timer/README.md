@@ -120,7 +120,7 @@ void CTimersDlg::OnTimer(UINT nIDEvent)  // called every uElapse milliseconds
 
 ## 2. Waitable Timers
 
-可等待計時器於 Windows 98 和 Windows NT 4.0 中引入，它們旨在與需要阻塞一段時間的執行緒一起使用。這些計時器是內核對象，在指定的時間或規則的時間間隔內被觸發。它們可以指定**回調函數(callback function)**（實際上是**非同步程序(asynchronous procedure)**調用，或稱為 **APC(Asynchronous Procedure Call)**），在計時器被觸發時調用該函數。這個回調函數通常被稱為**完成例程(completion routine)**。
+可等待計時器於 Windows 98 和 Windows NT 4.0 中引入，它們旨在與需要阻塞一段時間的執行緒一起使用。這些計時器是內核物件，在指定的時間或規則的時間間隔內被觸發。它們可以指定**回調函數(callback function)**（實際上是**非同步程序(asynchronous procedure)**調用，或稱為 **APC(Asynchronous Procedure Call)**），在計時器被觸發時調用該函數。這個回調函數通常被稱為**完成例程(completion routine)**。
 
 為了啟用完成例程的執行，執行緒必須處於警報狀態（執行 `SleepEx()`、`WaitForSingleObjectEx()`、`WaitForMultipleObjectsEx()`、`MsgWaitForMultipleObjectsEx()`、`SignalObjectAndWait()` 函數）。實際上，這意味著當我們使用可等待計時器時，我們的**主執行緒將被阻塞(main thread will be blocked)**。
 
@@ -436,4 +436,9 @@ int main()
 }
 
 ```
+
+說明 : 
+在給出的程式碼範例中，當計時器或事件觸發時，`WaitForMultipleObjects` 函數會將程序置於等待狀態。這意味著直到其中一個對象進入信號狀態，或者超時時間到達，程序才會繼續執行。在這個等待的過程中，程序處於阻塞狀態，無法執行其他的操作。
+當其中一個對象進入信號狀態時，程序會根據等待的結果進行相應的處理，然後再次進入阻塞狀態等待下一次觸發或超時。
+在這個程式碼範例中，由於我們設置了無限等待時間（INFINITE），因此程序會一直等待計時器或事件觸發，直到其中一個發生為止，這將導致程序在觸發前處於阻塞狀態。
 
