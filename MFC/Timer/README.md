@@ -207,6 +207,16 @@ DWORD WaitForMultipleObjects(DWORD nCount,
 - **bWaitAll** : 指示是否等待所有的物件進入信號狀態。如果設置為 `TRUE`，則等待所有物件進入信號狀態；如果設置為 `FALSE`，則等待任何一個物件進入信號狀態。
 - **dwMilliseconds** : 等待的最大時間，以毫秒為單位。如果設置為 `INFINITE`，則表示無限等待，直到對象進入信號狀態或發生錯誤。
 
+#### Return Value : 
+
+- 函數返回值為一個 `DWORD` 整數，表示等待的結果：
+  - 如果 `bWaitAll` 為 `TRUE`：
+    - `WAIT_OBJECT_0` 到 `WAIT_OBJECT_0 + nCount - 1`：所有對象都進入了信號狀態，等待成功。
+    - `WAIT_TIMEOUT`：經過了指定的等待時間，等待超時。
+  - 如果 `bWaitAll` 為 `FALSE`：
+    - `WAIT_OBJECT_0` 到 `WAIT_OBJECT_0 + nCount - 1`：至少有一個對象進入了信號狀態，等待成功。
+    - `WAIT_TIMEOUT`：經過了指定的等待時間，等待超時。
+
 
 
 最後，停止可等待計時器的函數：
