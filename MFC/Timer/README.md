@@ -190,7 +190,7 @@ BOOL CancelWaitableTimer(HANDLE hTimer);
 
 
 
-### Example :
+### Example 1 (參考網站中給的例子) :
 
 ```c++
 void CTimersDlg::OnButtonBegin()
@@ -237,4 +237,79 @@ void CALLBACK TimerProc(LPVOID lpArgToCompletionRoutine,
     obj->WaitTimerHandler();
 }
 ```
+
+
+
+### Example 2 (詢問 ChatGPT) :
+
+```c++
+#include <windows.h>
+#include <iostream>
+
+void BackupData()
+{
+    // 模擬備份操作
+    std::cout << "執行備份操作..." << std::endl;
+}
+
+int main()
+{
+    // 設置備份時間，假設每天的凌晨 2 點執行備份
+    SYSTEMTIME st;
+    st.wYear = 2024;
+    st.wMonth = 2;
+    st.wDay = 10;
+    st.wHour = 2;
+    st.wMinute = 0;
+    st.wSecond = 0;
+    st.wMilliseconds = 0;
+
+    FILETIME ft;
+    // 將系統時間轉換為文件時間
+    SystemTimeToFileTime(&st, &ft);
+
+    // 創建可等待計時器
+    HANDLE hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    if (hTimer == NULL)
+    {
+        std::cerr << "創建可等待計時器失敗。" << std::endl;
+        return 1;
+    }
+
+    // 設置計時器，使其在每天的特定時間點觸發
+    if (!SetWaitableTimer(hTimer, &ft, 24 * 60 * 60 * 1000, NULL, NULL, FALSE))
+    {
+        std::cerr << "設置可等待計時器失敗。" << std::endl;
+        CloseHandle(hTimer);
+        return 1;
+    }
+
+    // 等待計時器信號
+    DWORD dwWaitResult = WaitForSingleObject(hTimer, INFINITE);
+    if (dwWaitResult == WAIT_OBJECT_0)
+    {
+        // 計時器信號觸發，執行備份操作
+        BackupData();
+    }
+    else
+    {
+        std::cerr << "等待計時器失敗。" << std::endl;
+    }
+
+    // 關閉計時器
+    CloseHandle(hTimer);
+
+    return 0;
+}
+
+```
+
+說明 : 
+在此示例中，我們使用可等待計時器來安排每天凌晨 2 點執行的備份操作。一旦計時器信號被觸發，將執行備份操作。這樣，我們可以確保備份操作不會阻塞主線程，並且可以在計劃的時間執行，而不需要使用標準 Win32 計時器。
+
+$\star$ **Waitable Timers 與 Standard Win32 Timers 的差異** : 
+
+**如果上述範例使用了Standard Win32 Timers（`SetTimer` 函數），情況將會有所不同。使用Standard Win32 Timers會將計時器事件添加到主窗口的消息佇列中，並在消息循環中處理。這將導致主程序在等待計時器事件期間仍然可以處理其他消息，並且不會進入阻塞狀態。**
+
+**換句話說，當使用Standard Win32 Timers時，程序不會阻塞等待計時器事件，而是可以繼續處理其他消息和事件。這可能會導致在等待計時器事件期間，程序仍然需要消耗 CPU 資源和處理其他消息，而這可能不是理想的行為，特別是在需要長時間等待的情況下。**
 
