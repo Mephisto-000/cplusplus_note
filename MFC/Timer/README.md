@@ -172,6 +172,41 @@ BOOL SetWaitableTimer(HANDLE hTimer,
 
 - 當成功執行時，傳回非 0 值。
 
+然後是等到指定的物件處於訊號狀態或超過指定的時間間隔為止 : 
+
+```c++
+DWORD WaitForSingleObject(HANDLE hTimer,
+ 						DWORD  dwMilliseconds
+);
+```
+
+#### Arguments : 
+
+- **hTimer** : 要等待的物件的句柄，可以是任何一種可等待物件的句柄，如事件、互斥鎖、信號、計時器等。
+- **dwMilliseconds** : 等待的最大時間，以毫秒為單位。如果設置為 `INFINITE`，則表示無限等待，直到物件進入信號狀態或發生錯誤。
+
+#### Return Value : 
+
+- 函數返回值為一個 `DWORD` 整數，表示等待的結果：
+  - `WAIT_OBJECT_0` : 物件進入了信號狀態，等待成功。
+  - `WAIT_TIMEOUT` : 經過了指定的等待時間，等待超時。
+  - 其他值：等待失敗，可通過 `GetLastError` 函數獲取錯誤碼。
+
+```c++
+DWORD WaitForMultipleObjects(DWORD nCount,          
+						   const HANDLE *lpHandles,      
+						   BOOL bWaitAll,        
+						   DWORD dwMilliseconds   
+);
+```
+
+#### Arguments : 
+
+- **nCount** : 可等待物件的數量。
+- **lpHandles** : 指向一個 HANDLE 數組的指標，包含了待等待的可等待物件的句柄。
+- **bWaitAll** : 指示是否等待所有的物件進入信號狀態。如果設置為 `TRUE`，則等待所有物件進入信號狀態；如果設置為 `FALSE`，則等待任何一個物件進入信號狀態。
+- **dwMilliseconds** : 等待的最大時間，以毫秒為單位。如果設置為 `INFINITE`，則表示無限等待，直到對象進入信號狀態或發生錯誤。
+
 
 
 最後，停止可等待計時器的函數：
