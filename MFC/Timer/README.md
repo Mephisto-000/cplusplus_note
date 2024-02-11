@@ -114,7 +114,7 @@ void CTimersDlg::OnTimer(UINT nIDEvent)  // called every uElapse milliseconds
 小結 : 
 如果我們需要每半小時檢查信箱是否有新郵件，那麼Win32計時器就是我們想要的。然而，對於更精確的時間測量（經過的時間少於1秒），這些計時器幾乎不是解決方案。主要原因是計時器會向消息佇列發送`WM_TIMER`消息，而我們無法確定何時會處理這個消息。現在，您可能會認為設置`lpTimerFunc`是解決這個問題的方法，但事實並非如此。如果指定了`lpTimerFunc`，則默認窗口程序只有在處理`WM_TIMER`時才調用它。因此，我們仍然需要等待處理`WM_TIMER`。
 
-請注意，使用Win32計時器事件處理是從UI線程完成的。這個事實的一個好處是，我們不需要擔心在計時器事件處理程序中損壞我們的數據；另一方面，**在`WM_TIMER`處理程序中花費的時間將影響UI的響應性。如果你不相信我，試著在`CTimersDlg::OnTimer()`內調用類似`::Sleep(10000);`的東西**。
+請注意，使用Win32計時器事件處理是從UI執行緒完成的。這個事實的一個好處是，我們不需要擔心在計時器事件處理程序中損壞我們的數據；另一方面，**在`WM_TIMER`處理程序中花費的時間將影響UI的響應性。如果你不相信我，試著在`CTimersDlg::OnTimer()`內調用類似`::Sleep(10000);`的東西**。
 
 
 
@@ -350,7 +350,7 @@ int main()
 ```
 
 說明 : 
-在此示例中，我們使用可等待計時器來安排每天凌晨 2 點執行的備份操作。一旦計時器信號被觸發，將執行備份操作。這樣，我們可以確保備份操作不會阻塞主線程，並且可以在計劃的時間執行，而不需要使用標準 Win32 計時器。
+在此示例中，我們使用可等待計時器來安排每天凌晨 2 點執行的備份操作。一旦計時器信號被觸發，將執行備份操作。這樣，我們可以確保備份操作不會阻塞主執行緒，並且可以在計劃的時間執行，而不需要使用標準 Win32 計時器。
 
 $\star$ **Waitable Timers 與 Standard Win32 Timers 的差異** : 
 
@@ -596,8 +596,6 @@ int main()
 
 先比較 Queue Timers 與 Waitable Timers 的差異 : 
 
-當然，以下是將「線程」改為「執行緒」的版本，並加上對「執行緒池」的詳細說明：
-
 微軟的隊列計時器（Queue Timers）是一種計時器服務，允許應用程式在指定時間後透過執行緒池中的執行緒執行一個回呼函數。這種計時器透過將回呼函數排入執行緒池中的執行緒來執行，這樣做避免了應用程式需要自行管理執行緒的複雜性。
 
 隊列計時器的主要功能包括：
@@ -638,6 +636,8 @@ int main()
 
 ### To create a timer : 
 
+首先，第一個常見的功能，創建一個計時器佇列 : 
+
 ```c++
 HANDLE CreateTimerQueue();
 ```
@@ -645,3 +645,37 @@ HANDLE CreateTimerQueue();
 #### Return Value : 
 
 - 如果創建成功，返回計時器隊列的句柄；如果失敗，返回 `NULL`。
+
+然後是建立計時器，並意義其行為 : 
+
+```c++
+BOOL CreateTimerQueueTimer( PHANDLE phNewTimer,
+   						  HANDLE TimerQueue,
+                            WAITORTIMERCALLBACK Callback,
+   						  PVOID Parameter,
+             			   DWORD DueTime,
+             			   DWORD Period,
+           				   ULONG Flags
+);
+```
+
+#### Arguments : 
+
+- **phNewTimer** : 指向 `HANDLE` 的指針，此函數執行後，該 `HANDLE` 將接收新計時器的句柄。
+- **TimerQueue** : 計時器隊列的句柄，該計時器將被加入到這個隊列中。由 `CreateTimerQueue` 函數創建。
+- **Callback** : 計時器到期時要調用的回呼函數的指針。此函數必須符合 `WAITORTIMERCALLBACK` 函數的寫法。
+- **Parameter** : 傳遞給回呼函數的值。
+- **DueTime** : 在計時器第一次設置為觸發狀態前的時間（毫秒）。
+- **Period** : 計時器週期（毫秒）。如果為零，計時器只會觸發一次。
+- **Flags** : 一個或多個以下值 : 
+  - `WT_EXECUTEDEFAULT` : 為預設值，回呼函數將在計時器隊列的執行緒中執行。這個選項提供了最大的靈活性，因為它允許系統決定最適合執行回呼函數的時機。
+  - `WT_EXECUTEINTIMERTHREAD` : 指示回呼函數將在計時器隊列維護的專門計時器執行緒中執行。這有助於減少回呼函數的執行對其他線程的干擾。
+  - `WT_EXECUTEINIOTHREAD` : 指示回呼函數將在一個專門用於執行輸入/輸出 (I/O) 操作的執行緒中執行。這對於需要進行非阻塞 I/O 操作的回呼函數特別有用。
+  - `WT_EXECUTEINPERSISTENTTHREAD` : 表示回呼函數將在一個持續存在的執行緒中執行。使用此選項可以避免執行緒的頻繁創建和銷毀，從而提高性能，但可能會增加資源消耗。
+  - `WT_EXECUTELONGFUNCTION` : 表示回呼函數可能需要長時間執行。這個選項提示系統此回呼函數可能會阻塞其他任務，因此可能需要額外的資源管理。
+  - `WT_EXECUTEONLYONCE` : 指示計時器只應觸發一次，而不是按照設定的週期重複觸發。設定此選項後，計時器觸發一次就會自動取消。
+
+#### Return Value : 
+
+- 如果成功，返回 `TRUE`；如果失敗，返回 `FALSE`。
+
