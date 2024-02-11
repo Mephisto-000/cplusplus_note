@@ -442,3 +442,79 @@ int main()
 當其中一個對象進入信號狀態時，程序會根據等待的結果進行相應的處理，然後再次進入阻塞狀態等待下一次觸發或超時。
 在這個程式碼範例中，由於我們設置了無限等待時間（INFINITE），因此程序會一直等待計時器或事件觸發，直到其中一個發生為止，這將導致程序在觸發前處於阻塞狀態。
 
+### Example 4 (模擬非同步過程)
+
+```c++
+#include <windows.h>
+#include <iostream>
+
+DWORD WINAPI TimerThread(LPVOID lpParam) {
+    // 創建三個計時器
+    HANDLE hTimer1 = CreateWaitableTimer(NULL, FALSE, L"Timer1");
+    HANDLE hTimer2 = CreateWaitableTimer(NULL, FALSE, L"Timer2");
+    HANDLE hTimer3 = CreateWaitableTimer(NULL, FALSE, L"Timer3");
+
+    LARGE_INTEGER liDueTime1, liDueTime2, liDueTime3;
+    liDueTime1.QuadPart = -20000000LL;  // 2秒，以100奈秒為單位
+    liDueTime2.QuadPart = -40000000LL;  // 4秒，以100奈秒為單位
+    liDueTime3.QuadPart = -70000000LL;  // 7秒，以100奈秒為單位
+
+    // 設定計時器
+    SetWaitableTimer(hTimer1, &liDueTime1, 2000, NULL, NULL, FALSE);
+    SetWaitableTimer(hTimer2, &liDueTime2, 4000, NULL, NULL, FALSE);
+    SetWaitableTimer(hTimer3, &liDueTime3, 7000, NULL, NULL, FALSE);
+
+    DWORD endTime = GetTickCount() + 20000;  // 20秒後結束
+
+    while (GetTickCount() < endTime) {
+        // 檢查第一個計時器
+        if (WaitForSingleObject(hTimer1, 0) == WAIT_OBJECT_0) {
+            std::cout << "計時器1觸發，進行處理。執行緒代碼：" << GetCurrentThreadId() << std::endl;
+            SetWaitableTimer(hTimer1, &liDueTime1, 2000, NULL, NULL, FALSE);
+        }
+
+        // 檢查第二個計時器
+        if (WaitForSingleObject(hTimer2, 0) == WAIT_OBJECT_0) {
+            std::cout << "計時器2觸發，進行處理。執行緒代碼：" << GetCurrentThreadId() << std::endl;
+            SetWaitableTimer(hTimer2, &liDueTime2, 4000, NULL, NULL, FALSE);
+        }
+
+        // 檢查第三個計時器
+        if (WaitForSingleObject(hTimer3, 0) == WAIT_OBJECT_0) {
+            std::cout << "計時器3觸發，進行處理。執行緒代碼：" << GetCurrentThreadId() << std::endl;
+            SetWaitableTimer(hTimer3, &liDueTime3, 7000, NULL, NULL, FALSE);
+        }
+
+        // 執行其他任務，例如輸出計數器
+        static int count = 0;
+        std::cout << "計時器執行緒計數器：" << ++count << "，執行緒代碼：" << GetCurrentThreadId() << std::endl;
+
+        Sleep(500);  // 簡單延遲，模擬工作負載
+    }
+
+    // 關閉計時器控制代碼
+    CloseHandle(hTimer1);
+    CloseHandle(hTimer2);
+    CloseHandle(hTimer3);
+
+    return 0;
+}
+
+int main() {
+    std::cout << "主執行緒開始執行。執行緒代碼：" << GetCurrentThreadId() << std::endl;
+
+    // 創建一個新的執行緒來處理計時器和其他任務
+    HANDLE hThread = CreateThread(NULL, 0, TimerThread, NULL, 0, NULL);
+
+    // 等待新創建的執行緒結束
+    WaitForSingleObject(hThread, INFINITE);
+
+    // 關閉執行緒控制代碼
+    CloseHandle(hThread);
+
+    std::cout << "主執行緒結束。執行緒代碼：" << GetCurrentThreadId() << std::endl;
+
+    return 0;
+}
+```
+
