@@ -1,6 +1,6 @@
 # Synchronization Objects
 
-參考網站 : [Microsoft Learn](https://learn.microsoft.com/en-us/windows/win32/sync/synchronization-objects)
+參考網站 : [Microsoft Learn](https://learn.microsoft.com/en-us/windows/win32/sync/synchronization-objects)  
 翻譯使用 : ChatGPT 3.5
 
 ## Introduction
