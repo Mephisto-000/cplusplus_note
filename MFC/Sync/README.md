@@ -64,4 +64,61 @@ BOOL ReleaseSemaphore(HANDLE hSemaphore,
 
 #### Arguments : 
 
-- **hSemaphore** : 
+- **hSemaphore** : 要釋放的信號量的句柄。`CreateSemaphore`會傳回這個句柄。
+- **lReleaseCount** : 要增加的釋放計數值。此值必須大於零。 如果指定的數量會導致號志的計數超過建立旗號時所指定的計數上限，則計數不會變更，且函式會傳回`FALSE`。
+- **lpPreviousCount** : 要接收信號先前計數之變數的指標。 如果不需要先前的計數，這個參數可以是 **Null** 。
+
+#### Return Value :
+
+- 如果函式成功，則傳回非零的值。
+
+### Example 1(防止資源競爭, Race conditions)
+
+```c++
+#include <windows.h>
+#include <iostream>
+
+HANDLE g_Semaphore;
+
+DWORD WINAPI ThreadFunction(LPVOID lpParam) {
+    // 等待信號量
+    WaitForSingleObject(g_Semaphore, INFINITE);
+
+    // 現在這個線程擁有對共享資源的獨占訪問
+    std::cout << "Thread " << GetCurrentThreadId() << " is accessing the shared resource." << std::endl;
+
+    // 模擬對共享資源的訪問
+    Sleep(1000); // 假設這是對共享資源的操作
+
+    std::cout << "Thread " << GetCurrentThreadId() << " has finished accessing the shared resource." << std::endl;
+
+    // 釋放信號量
+    ReleaseSemaphore(g_Semaphore, 1, NULL);
+
+    return 0;
+}
+
+int main() {
+    // 創建信號量，初始計數和最大計數都設為1，這樣一次只有一個線程能獲得信號量
+    g_Semaphore = CreateSemaphore(NULL, 1, 1, NULL);
+
+    // 創建兩個線程，模擬對共享資源的訪問
+    HANDLE hThreads[2];
+    for (int i = 0; i < 2; ++i) {
+        hThreads[i] = CreateThread(NULL, 0, ThreadFunction, NULL, 0, NULL);
+    }
+
+    // 等待所有線程完成
+    WaitForMultipleObjects(2, hThreads, TRUE, INFINITE);
+
+    // 清理
+    for (int i = 0; i < 2; ++i) {
+        CloseHandle(hThreads[i]);
+    }
+    CloseHandle(g_Semaphore);
+
+    return 0;
+}
+
+```
+
