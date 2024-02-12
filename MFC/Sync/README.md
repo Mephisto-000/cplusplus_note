@@ -74,6 +74,8 @@ BOOL ReleaseSemaphore(HANDLE hSemaphore,
 
 ### Example 1(防止資源競爭, Race conditions)
 
+$\star$ [什麼是資源競爭(race condition)和死鎖(deadlock)](https://cloudxlab.com/blog/race-condition-and-deadlock/)
+
 ```c++
 #include <windows.h>
 #include <iostream>
@@ -88,7 +90,7 @@ DWORD WINAPI ThreadFunction(LPVOID lpParam) {
     std::cout << "Thread " << GetCurrentThreadId() << " is accessing the shared resource." << std::endl;
 
     // 模擬對共享資源的訪問
-    Sleep(1000); // 假設這是對共享資源的操作
+    Sleep(3000); // 假設這是對共享資源的操作
 
     std::cout << "Thread " << GetCurrentThreadId() << " has finished accessing the shared resource." << std::endl;
 
@@ -122,3 +124,5 @@ int main() {
 
 ```
 
+說明 : 
+這段程式碼創建了一個信號量和兩個執行緒，每個執行緒都試圖訪問一個共享資源。信號量確保了一次只有一個執行緒能訪問該資源，從而避免了資源競爭。
