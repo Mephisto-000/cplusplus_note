@@ -212,3 +212,28 @@ HANDLE CreateMutex(LPSECURITY_ATTRIBUTES lpMutexAttributes,
 );
 ```
 
+#### Arguments : 
+
+- **lpMutexAttributes** : 指向`SECURITY_ATTRIBUTES`結構的指針，這個結構決定了返回的句柄是否可以被子進程繼承。如果為NULL，則句柄不能被繼承。
+- **bInitialOwner** : 如果為`TRUE`，則創建互斥鎖的線程立即成為互斥鎖的擁有者。
+- **lpName** : 互斥鎖的名稱。如果為NULL，則創建一個未命名的互斥鎖。名稱限制為 **MAX_PATH** 個字元。 名稱比較區分大小寫。
+
+#### Return Value :
+
+- 如果函式成功，則傳回值是新建立 Mutex 物件的句柄。
+
+要是要釋放互斥鎖 : 
+
+```c++
+BOOL ReleaseMutex(HANDLE hMutex
+);
+```
+
+#### Arguments : 
+
+- **hMutex** : 要釋放的互斥鎖的句柄。
+
+#### Return Value :
+
+- 如果函式成功，則傳回非零的值。
+
