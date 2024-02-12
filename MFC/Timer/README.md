@@ -679,3 +679,186 @@ BOOL CreateTimerQueueTimer( PHANDLE phNewTimer,
 
 - 如果成功，返回 `TRUE`；如果失敗，返回 `FALSE`。
 
+若要更新已存在的計時器設定時，需用到 : 
+
+```c++
+BOOL ChangeTimerQueueTimer(HANDLE TimerQueue,
+  						 HANDLE Timer,
+                           ULONG DueTime,
+                           ULONG Period
+);
+```
+
+#### Arguments : 
+
+- **TimerQueue** : 計時器隊列的句柄，計時器必須已在這個隊列中。`CreateTimerQueue`函式會傳回此控制碼。
+- **Timer** : 要更改的計時器的句柄。`CreateTimerQueueTimer`函式會傳回這個控制碼。
+- **DueTime** : 計時器首次觸發之前的新等待時間（以毫秒為單位）。
+- **Period** : 計時器的新觸發間隔時間（以毫秒為單位）。
+
+#### Return Value : 
+
+- 如果成功，返回 `TRUE`；如果失敗，返回 `FALSE`。
+
+若要刪除擱置的計時器，則是要使用 : 
+
+```c++
+BOOL DeleteTimerQueueTimer(HANDLE TimerQueue,
+                           HANDLE Timer,
+                           HANDLE CompletionEvent
+);
+```
+
+#### Arguments : 
+
+- **TimerQueue** : 計時器隊列的句柄，計時器必須已在這個隊列中。`CreateTimerQueue`函式會傳回此控制碼。
+- **Timer** : 要刪除的計時器的句柄。`CreateTimerQueueTimer`函式會傳回這個控制碼。
+- **CompletionEvent** : 一個可選的事件句柄。如果此引數不為 `NULL`，函數將等待計時器被刪除，並在指定的事件上設置有信號狀態。如果為 `INVALID_HANDLE_VALUE`，函數會等待計時器被刪除，然後立即返回。
+
+#### Return Value : 
+
+- 如果成功，返回 `TRUE`；如果失敗，返回 `FALSE`。
+
+當完成計時器佇列時，要刪除計時器佇列並取消佇列中所有計時器的排程則使用 : 
+
+```c++
+BOOL DeleteTimerQueueEx(HANDLE TimerQueue,
+					  HANDLE CompletionEvent
+);
+```
+
+#### Arguments : 
+
+- **TimerQueue** : 要刪除的計時器佇列的句柄。
+- **CompletionEvent** : 一個可選的事件句柄。與 `DeleteTimerQueueTimer` 中的 `CompletionEvent` 相似，用於同步計時器隊列的刪除操作。
+
+#### Return Value : 
+
+- 如果成功，返回 `TRUE`；如果失敗，返回 `FALSE`。
+
+### Example 1
+
+```c++
+#include <windows.h>
+#include <iostream>
+
+// 計時器回呼函數
+VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired)
+{
+    int timerId = reinterpret_cast<int>(lpParam);
+    std::cout << "計時器事件觸發，計時器ID: " << timerId << "，執行緒ID：" << GetCurrentThreadId() << std::endl;
+}
+
+int main()
+{
+    const int TIMER_COUNT = 5;  // 計時器數量
+    HANDLE hTimers[TIMER_COUNT];  // 計時器句柄陣列
+    HANDLE hTimerQueue = NULL;
+
+    // 創建一個計時器隊列
+    hTimerQueue = CreateTimerQueue();
+    if (hTimerQueue == NULL)
+    {
+        std::cerr << "創建計時器隊列失敗。" << std::endl;
+        return -1;
+    }
+
+    // 在隊列中新增多個計時器
+    for (int i = 0; i < TIMER_COUNT; ++i)
+    {
+        BOOL isSuccess = CreateTimerQueueTimer(
+            &hTimers[i],  // 計時器句柄的指標
+            hTimerQueue,  // 計時器隊列的句柄
+            TimerRoutine,  // 計時器回呼函數
+            reinterpret_cast<PVOID>(i),  // 傳遞給回呼函數的參數，用於識別計時器
+            1000 * (i + 1),  // 首次觸發時間，不同計時器設置不同的首次觸發時間
+            2000 * (i + 1),  // 觸發間隔時間，不同計時器設置不同的觸發間隔
+            0  // 選項，0 表示使用預設設定
+        );
+
+        if (!isSuccess)
+        {
+            std::cerr << "新增計時器到隊列失敗。計時器ID: " << i << std::endl;
+            return -1;
+        }
+    }
+
+    std::cout << "按任意鍵結束計時器..." << std::endl;
+    getchar();
+
+    // 刪除所有計時器並清理隊列
+    for (int i = 0; i < TIMER_COUNT; ++i)
+    {
+        DeleteTimerQueueTimer(hTimerQueue, hTimers[i], NULL);
+    }
+    DeleteTimerQueue(hTimerQueue);
+
+    return 0;
+}
+```
+
+要是想要更新計時器佇列的設定 : 
+
+### Example 2(使用 `ChangeTimerQueueTimer`) : 
+
+```c++
+#include <windows.h>
+#include <iostream>
+
+// 計時器回呼函數
+VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired)
+{
+    // 檢查計時器是否真的觸發了
+    if (TimerOrWaitFired)
+    {
+        std::cout << "計時器觸發，執行緒ID：" << GetCurrentThreadId() << std::endl;
+    }
+}
+
+int main()
+{
+    HANDLE hTimer = NULL;
+    HANDLE hTimerQueue = NULL;
+
+    // 創建一個計時器隊列
+    hTimerQueue = CreateTimerQueue();
+    if (hTimerQueue == NULL)
+    {
+        std::cerr << "創建計時器隊列失敗。" << std::endl;
+        return -1;
+    }
+
+    // 在隊列中創建計時器，初始設定為5秒後首次觸發，之後每3秒觸發一次
+    BOOL isSuccess = CreateTimerQueueTimer(&hTimer, hTimerQueue, TimerRoutine, NULL, 5000, 3000, 0);
+    if (!isSuccess)
+    {
+        std::cerr << "新增計時器到隊列失敗。" << std::endl;
+        return -1;
+    }
+
+    // 等待一段時間後，改變計時器設定，設置為2秒後首次觸發，之後每1秒觸發一次
+    Sleep(10000); // 等待10秒
+    isSuccess = ChangeTimerQueueTimer(hTimerQueue, hTimer, 2000, 1000);
+    if (!isSuccess)
+    {
+        std::cerr << "更改計時器設定失敗。" << std::endl;
+        return -1;
+    }
+
+    std::cout << "計時器設定已更改。按任意鍵結束..." << std::endl;
+    getchar();
+
+    // 刪除計時器並清理隊列
+    DeleteTimerQueueTimer(hTimerQueue, hTimer, NULL);
+    DeleteTimerQueue(hTimerQueue);
+
+    return 0;
+}
+```
+
+
+
+
+
+
+
