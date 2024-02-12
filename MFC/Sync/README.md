@@ -201,3 +201,14 @@ int main() {
 
 通過確保在任何情況下，獲得信號量的線程最終都會釋放它，我們可以避免因線程持續等待無法釋放的信號量而導致的死鎖情況。這個範例展示了如何通過合理使用信號量來同步線程，同時避免死鎖的基本策略。
 
+## 2. Mutex Objects
+
+創建互斥鎖 : 
+
+```c++
+HANDLE CreateMutex(LPSECURITY_ATTRIBUTES lpMutexAttributes,
+                   BOOL bInitialOwner,
+                   LPCTSTR lpName
+);
+```
+
