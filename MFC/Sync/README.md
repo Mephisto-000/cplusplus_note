@@ -75,6 +75,8 @@ BOOL ReleaseSemaphore(HANDLE hSemaphore,
 ### Example 1(防止資源競爭, Race conditions)
 
 $\star$ [什麼是資源競爭(race condition)和死鎖(deadlock)](https://cloudxlab.com/blog/race-condition-and-deadlock/)
+$\star$ [執行緒Thread+死結Deadlock](https://ithelp.ithome.com.tw/articles/10309156?sc=rss.iron)
+$\star$ [RaceCondition+臨界區間(Critical Section)](https://ithelp.ithome.com.tw/articles/10309334)
 
 ```c++
 #include <windows.h>
@@ -176,4 +178,9 @@ int main() {
 }
 
 ```
+
+說明 : 
+在這個範例中，我們定義了一個全局信號量`g_Semaphore`，並在`main`函數中用`CreateSemaphore`函數初始化它。接著創建了兩個線程，每個線程都執行`ThreadFunction`。在`ThreadFunction`中，線程首先使用`WaitForSingleObject`函數等待信號量，這代表線程想要進入"關鍵區段"。一旦獲得信號量，線程就模擬一個需要獨占訪問資源的操作（這裡用`Sleep`函數模擬）。操作完成後，線程使用`ReleaseSemaphore`函數釋放信號量，允許其他線程進入關鍵區段。
+
+通過確保在任何情況下，獲得信號量的線程最終都會釋放它，我們可以避免因線程持續等待無法釋放的信號量而導致的死鎖情況。這個範例展示了如何通過合理使用信號量來同步線程，同時避免死鎖的基本策略。
 
