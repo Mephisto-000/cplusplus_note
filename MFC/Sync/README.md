@@ -78,6 +78,23 @@ $\star$ [什麼是資源競爭(race condition)和死鎖(deadlock)](https://cloud
 $\star$ [執行緒Thread+死結Deadlock](https://ithelp.ithome.com.tw/articles/10309156?sc=rss.iron)
 $\star$ [RaceCondition+臨界區間(Critical Section)](https://ithelp.ithome.com.tw/articles/10309334)
 
+簡單來說 : 
+
+|                        **Dead Lock**                         |                      **Race Condition**                      |
+| :----------------------------------------------------------: | :----------------------------------------------------------: |
+| 說明 : 兩個(含)以上的執行緒(或行程)因互相等待物件的鎖而導致程式無法繼續執行的現象。 | 說明 : 兩個(含)以上的執行緒(或行程)，在相同的運作下，因執行順序的不同，造成處理的結果不同。 |
+
+
+
+造成 Dead Lock 的條件(缺一不可) : 
+
+1. **不可搶奪 (No Preemptive)** : 不可互相搶奪彼此的資源。
+2. **持有並等待 (Hold and Wait)** : 等待時可以持續持有資源。
+3. **互斥 (Mutal Exclusion)** : 資源不能共用。
+4. **循環等待 (Circular Waiting)** : 每個 thread(或 process) 都在等待下一個 thread(或 process)，最後一個 thread(或 process) 又剛好在等第一個 thread(或 process) 形成一個圈；健身房裡一人正在踩飛輪，一人正在舉啞鈴，踩飛輪的人想等舉啞鈴的人用完就去舉啞鈴，舉啞鈴的人想等踩飛輪的人用完就去踩飛輪。
+
+
+
 ```c++
 #include <windows.h>
 #include <iostream>
