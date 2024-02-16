@@ -1,47 +1,66 @@
-#include <windows.h>
+ï»¿#include <windows.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 
-void IncrementCounterInFile(const std::string& filePath) {
-    // ¶}±Ò¤å¥ó¨ÃÅª¨ú­p¼Æ¾¹­È
-    std::ifstream fileRead(filePath);
-    int counter = 0;
-    if (fileRead.is_open()) {
-        fileRead >> counter;
-        fileRead.close();
+void WriteToFile(const std::string& filename, const std::string& processInfo, int updateCount) 
+{
+    std::ofstream file;
+    file.open(filename, std::ios_base::app); // é–‹å•Ÿæ–‡ä»¶
+    if (file.is_open()) 
+    {
+        file << processInfo << "ï¼Œæ›´æ–°æ¬¡æ•¸: " << updateCount << std::endl;
+        file.close();
     }
-
-    // ¼W¥[­p¼Æ¾¹­È
-    counter++;
-
-    // ¼g¦^·sªº­p¼Æ¾¹­È¨ì¤å¥ó
-    std::ofstream fileWrite(filePath);
-    if (fileWrite.is_open()) {
-        fileWrite << counter;
-        fileWrite.close();
+    else 
+    {
+        std::cerr << "ç„¡æ³•é–‹å•Ÿæ–‡ä»¶é€²è¡Œå¯«å…¥ã€‚" << std::endl;
     }
 }
 
-int main() {
-    // ¹Á¸Õ¥´¶}©Î³Ð«Ø¤@­Ó Mutex
-    HANDLE hMutex = CreateMutex(NULL, FALSE, L"MySharedMutex");
-    if (hMutex == NULL) {
-        std::cerr << "CreateMutex error: " << GetLastError() << std::endl;
+int main() 
+{
+    const std::string filename = "example.txt";             // å¯«å…¥çš„æ–‡ä»¶åç¨±
+    const std::string mutexName = "Global\\MyAppMutex";     // Mutex åç¨±
+
+    // å‰µå»ºæˆ–æ‰“é–‹å‘½åçš„äº’æ–¥é«”
+    HANDLE hMutex = CreateMutexA(NULL, FALSE, mutexName.c_str());
+    if (hMutex == NULL) 
+    {
+        std::cerr << "CreateMutex éŒ¯èª¤: " << GetLastError() << std::endl;
         return 1;
     }
 
-    // µ¥«ÝÀò±o Mutex ªº¾Ö¦³Åv
-    WaitForSingleObject(hMutex, INFINITE);
+    // åœ¨è¨ªå•æ–‡ä»¶ä¹‹å‰å˜—è©¦ç²å–äº’æ–¥é«”
+    DWORD dwWaitResult = WaitForSingleObject(hMutex, INFINITE); // ç„¡é™ç­‰å¾…
+    try 
+    {
+        if (dwWaitResult == WAIT_OBJECT_0 || dwWaitResult == WAIT_ABANDONED) 
+        {
+            for (int i = 1; i <= 10; ++i) 
+            { // ç¸½å…±æ›´æ–°10æ¬¡
+                std::string processInfo = "ç”±è¡Œç¨‹IDä¿®æ”¹: " + std::to_string(GetCurrentProcessId()) + ", æ–‡ä»¶: P2.cpp";
+                WriteToFile(filename, processInfo, i);
+                Sleep(1000); // æš«åœä¸€ç§’
+            }
+            // å®Œæˆå¾Œé‡‹æ”¾äº’æ–¥é«”
+            if (!ReleaseMutex(hMutex)) 
+            {
+                std::cerr << "ReleaseMutex éŒ¯èª¤: " << GetLastError() << std::endl;
+            }
+        }
+        else 
+        {
+            std::cerr << "ç­‰å¾…äº’æ–¥é«”å¤±æ•—ã€‚" << std::endl;
+        }
+    }
+    catch (const std::exception& e) 
+    {
+        std::cerr << "ç™¼ç”Ÿç•°å¸¸: " << e.what() << std::endl;
+        // å³ä½¿ç™¼ç”Ÿç•°å¸¸ï¼Œä¹Ÿè¦ç¢ºä¿é‡‹æ”¾äº’æ–¥é«”
+        ReleaseMutex(hMutex);
+    }
 
-    // §ó·s¦@¨É¤å¥ó
-    IncrementCounterInFile("shared_counter.txt");
-
-    // ÄÀ©ñ Mutex
-    ReleaseMutex(hMutex);
-
-    // ÄÀ©ñ Mutex ¹ï¶H¥y¬`
     CloseHandle(hMutex);
     return 0;
 }
-

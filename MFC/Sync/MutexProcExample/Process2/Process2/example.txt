@@ -1,0 +1,35 @@
+パ秈祘IDэ: 10908, ゅン: main.cpp
+パ秈祘IDэ: 21648, ゅン: Process1.cpp
+パ秈祘IDэ: 28748, ゅン: Process2.cpp
+パ秈祘IDэ: 23652, ゅン: Process2.cpp
+パ秈祘IDэ: 8124, ゅン: Process2.cpp
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 1
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 2
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 3
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 4
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 5
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 6
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 7
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 8
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 9
+パ秈祘IDэ: 11192, ゅン: P2.cpp穝Ω计: 10
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 1
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 2
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 3
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 4
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 5
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 6
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 7
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 8
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 9
+パ秈祘IDэ: 8228, ゅン: P2.cpp穝Ω计: 10
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 1
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 2
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 3
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 4
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 5
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 6
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 7
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 8
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 9
+パ秈祘IDэ: 28516, ゅン: P2.cpp穝Ω计: 10
