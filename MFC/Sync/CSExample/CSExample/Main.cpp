@@ -3,6 +3,7 @@
 
 CRITICAL_SECTION g_csCriticalSection; // 定義一個全局關鍵區段對象
 
+// 巢狀 critical section
 
 
 DWORD WINAPI ThreadFunction2(LPVOID lpParam)
