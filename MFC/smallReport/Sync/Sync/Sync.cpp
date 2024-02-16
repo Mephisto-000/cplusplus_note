@@ -25,7 +25,7 @@
 
 
 // 使用的函數 : 
-// 1. 創建信號量物件 :
+// 1-1. 創建信號量物件 :
 HANDLE CreateSemaphore(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes, LONG lInitialCount, LONG lMaximumCount, LPCTSTR lpName)
 // 
 // Input : 
@@ -41,7 +41,7 @@ HANDLE CreateSemaphore(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes, LONG lInitia
 // 
 /////////////////////////////////////////////////////
 
-// 2. 增加信號量的計數值(通常在一個執行緒完成對共享資源的訪問後)
+// 1-2. 增加信號量的計數值(通常在一個執行緒完成對共享資源的訪問後)
 BOOL ReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LPLONG lpPreviousCount)
 // 
 // Input : 
@@ -58,16 +58,17 @@ BOOL ReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LPLONG lpPreviousCo
 /////////////////////////////////////////////////////
 
 
-// Example : 
+// Example 1  : 
 
 #include <windows.h>
 #include <iostream>
 
-HANDLE g_Semaphore;
+HANDLE g_hSemaphore;
 
-DWORD WINAPI ThreadFunction(LPVOID lpParam) {
+DWORD WINAPI ThreadFunction(LPVOID lpParam) 
+{
     // 等待信號量
-    WaitForSingleObject(g_Semaphore, INFINITE);
+    WaitForSingleObject(g_hSemaphore, INFINITE);
 
     // 現在這個線程擁有對共享資源的獨占訪問
     std::cout << "Thread " << GetCurrentThreadId() << " is accessing the shared resource." << std::endl;
@@ -78,18 +79,20 @@ DWORD WINAPI ThreadFunction(LPVOID lpParam) {
     std::cout << "Thread " << GetCurrentThreadId() << " has finished accessing the shared resource." << std::endl;
 
     // 釋放信號量
-    ReleaseSemaphore(g_Semaphore, 1, NULL);
+    ReleaseSemaphore(g_hSemaphore, 1, NULL);
 
     return 0;
 }
 
-int main() {
+int main() 
+{
     // 創建信號量，初始計數和最大計數都設為1，這樣一次只有一個線程能獲得信號量
-    g_Semaphore = CreateSemaphore(NULL, 1, 1, NULL);
+    g_hSemaphore = CreateSemaphore(NULL, 1, 1, NULL);
 
     // 創建兩個線程，模擬對共享資源的訪問
     HANDLE hThreads[2];
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) 
+    {
         hThreads[i] = CreateThread(NULL, 0, ThreadFunction, NULL, 0, NULL);
     }
 
@@ -97,10 +100,11 @@ int main() {
     WaitForMultipleObjects(2, hThreads, TRUE, INFINITE);
 
     // 清理
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) 
+    {
         CloseHandle(hThreads[i]);
     }
-    CloseHandle(g_Semaphore);
+    CloseHandle(g_hSemaphore);
 
     return 0;
 }
@@ -125,7 +129,7 @@ int main() {
 
 
 // 使用的函數 : 
-// 1. 創建互斥鎖
+// 2-1. 創建互斥鎖
 HANDLE CreateMutex(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCTSTR lpName)
 // 
 // Input : 
@@ -139,7 +143,7 @@ HANDLE CreateMutex(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, 
 // 
 /////////////////////////////////////////////////////
 
-// 2. 釋放互斥鎖
+// 2-2. 釋放互斥鎖
 BOOL ReleaseMutex(HANDLE hMutex)
 // 
 // Input : 
@@ -151,16 +155,17 @@ BOOL ReleaseMutex(HANDLE hMutex)
 /////////////////////////////////////////////////////
 
 
-// Example : 
+// Example 2  : 
 
 #include <windows.h>
 #include <iostream>
 
-HANDLE g_Mutex;
+HANDLE g_hMutex;
 
-DWORD WINAPI ThreadFunction(LPVOID lpParam) {
+DWORD WINAPI ThreadFunction(LPVOID lpParam) 
+{
     // 等待獲得互斥鎖
-    WaitForSingleObject(g_Mutex, INFINITE);
+    WaitForSingleObject(g_hMutex, INFINITE);
 
     // 進入關鍵區域
     std::cout << "Thread " << GetCurrentThreadId() << " is updating the counter." << std::endl;
@@ -173,18 +178,20 @@ DWORD WINAPI ThreadFunction(LPVOID lpParam) {
     Sleep(3000); // 模擬對共享資源的處理時間
 
     // 釋放互斥鎖
-    ReleaseMutex(g_Mutex);
+    ReleaseMutex(g_hMutex);
 
     return 0;
 }
 
-int main() {
+int main() 
+{
     // 創建一個互斥鎖
-    g_Mutex = CreateMutex(NULL, FALSE, NULL);
+    g_hMutex = CreateMutex(NULL, FALSE, NULL);
 
     // 創建兩個線程
     HANDLE hThreads[2];
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) 
+    {
         hThreads[i] = CreateThread(NULL, 0, ThreadFunction, NULL, 0, NULL);
     }
 
@@ -192,10 +199,11 @@ int main() {
     WaitForMultipleObjects(2, hThreads, TRUE, INFINITE);
 
     // 清理
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) 
+    {
         CloseHandle(hThreads[i]);
     }
-    CloseHandle(g_Mutex);
+    CloseHandle(g_hMutex);
 
     return 0;
 }
@@ -219,7 +227,7 @@ int main() {
 
 
 // 使用的函數 : 
-// 1. 初始化臨界區域物件
+// 3-1. 初始化臨界區域物件
 void InitializeCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 // Input : 
@@ -230,7 +238,7 @@ void InitializeCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 /////////////////////////////////////////////////////
 
-// 2. 進入已初始化的臨界區域
+// 3-2. 進入已初始化的臨界區域
 void EnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 // Input : 
@@ -245,7 +253,7 @@ void EnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 /////////////////////////////////////////////////////
 
-// 3. 嘗試進入已初始化的臨界區域
+// 3-3. 嘗試進入已初始化的臨界區域
 BOOL TryEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 // Input : 
@@ -258,7 +266,7 @@ BOOL TryEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 /////////////////////////////////////////////////////
 
-// 4. 離開臨界區域
+// 3-4. 離開臨界區域
 void LeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 // Input : 
@@ -269,7 +277,7 @@ void LeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 /////////////////////////////////////////////////////
 
-// 5. 刪除臨界區域物件
+// 3-5. 刪除臨界區域物件
 void DeleteCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 // 
 // Input : 
@@ -281,15 +289,16 @@ void DeleteCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 /////////////////////////////////////////////////////
 
 
-// Example : 
+// Example 3  : 
 
 #include <windows.h>
 #include <iostream>
 
-CRITICAL_SECTION g_CriticalSection; // 定義一個全局關鍵區段對象
+CRITICAL_SECTION g_csCriticalSection; // 定義一個全局關鍵區段對象
 
-DWORD WINAPI ThreadFunction(LPVOID lpParam) {
-    EnterCriticalSection(&g_CriticalSection); // 進入關鍵區段
+DWORD WINAPI ThreadFunction(LPVOID lpParam) 
+{
+    EnterCriticalSection(&g_csCriticalSection); // 進入關鍵區段
 
     // 這裡是被保護的代碼區域，一次只能有一個線程執行這裡的代碼
     std::cout << "Thread " << GetCurrentThreadId() << " is entering critical section." << std::endl;
@@ -299,13 +308,14 @@ DWORD WINAPI ThreadFunction(LPVOID lpParam) {
 
     std::cout << "Thread " << GetCurrentThreadId() << " is leaving critical section." << std::endl;
 
-    LeaveCriticalSection(&g_CriticalSection); // 離開關鍵區段
+    LeaveCriticalSection(&g_csCriticalSection); // 離開關鍵區段
 
     return 0;
 }
 
-int main() {
-    InitializeCriticalSection(&g_CriticalSection); // 初始化關鍵區段對象
+int main() 
+{
+    InitializeCriticalSection(&g_csCriticalSection); // 初始化關鍵區段對象
 
     // 創建兩個線程
     HANDLE hThread1 = CreateThread(NULL, 0, ThreadFunction, NULL, 0, NULL);
@@ -316,7 +326,7 @@ int main() {
     WaitForSingleObject(hThread2, INFINITE);
 
     // 清理資源
-    DeleteCriticalSection(&g_CriticalSection);
+    DeleteCriticalSection(&g_csCriticalSection);
     CloseHandle(hThread1);
     CloseHandle(hThread2);
 
