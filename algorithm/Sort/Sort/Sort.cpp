@@ -207,6 +207,13 @@ void Merge(int ayData[], int iStart, int iFinish, int iMiddle)
 	int* iLeft = (int*)malloc(sizeof(int) * (iSizeLeft + 1));
 	int* iRight = (int*)malloc(sizeof(int) * (iSizeRight + 1));
 
+	// 檢查記憶體分配是否成功
+	if (!iLeft || !iRight) {
+		free(iLeft);  // 確保釋放已分配的記憶體
+		free(iRight);
+		return;  // 在實際應用中應處理錯誤，如通過返回錯誤代碼
+	}
+
 	memcpy(iLeft, ayData + iStart, sizeof(int) * (iSizeLeft));
 	memcpy(iRight, ayData + iMiddle + 1, sizeof(int) * (iSizeRight));
 
